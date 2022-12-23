@@ -13,7 +13,7 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
-    <!-- RTSP Video streaming -->
+    <!-- RTSP Video streaming & voice recognition -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 
     <uses-feature android:name="android.hardware.camera" android:required="true"/>
@@ -23,7 +23,7 @@
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false"/>
     <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="false"/>
     <uses-feature android:name="android.hardware.sensor.light" android:required="false"/>
-
+    <uses-feature android:name="android.hardware.microphone" android:required="false"/>
 
     <application
         android:allowBackup="false"
@@ -77,6 +77,11 @@
             android:name=".logging.SensorService"
             android:enabled="true"
             android:launchMode="singleTask" />
+
+        <service
+          android:enabled="true"
+          android:exported="true"
+          android:name=".env.voicerecog.VoiceRecognitionService"/>
 
         <service android:name="net.majorkernelpanic.streaming.rtsp.RtspServer"/>
 

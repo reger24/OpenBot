@@ -4,7 +4,7 @@ task downloadNetworks(type: Download) {
             'https://storage.googleapis.com/openbot_models/ssd_mobilenet_v1_1_metadata.tflite',
             'https://storage.googleapis.com/openbot_models/navigation.tflite',
             'https://storage.googleapis.com/openbot_models/coco.txt',
-            'https://storage.googleapis.com/openbot_models/labelmap.txt',
+            'https://storage.googleapis.com/openbot_models/labelmap.txt'
     ])
     src
     dest project.ext.ASSET_DIR + '/networks'
@@ -12,4 +12,18 @@ task downloadNetworks(type: Download) {
     overwrite false
 }
 
-preBuild.dependsOn downloadNetworks
+// network and label download for the voice recognition (class VoiceRecognitionService)
+// TODO: include network files in openbot_models storage (fyi: related example code is deprecated)
+task downloadZipFile(type: Download) {
+    src 'https://storage.googleapis.com/download.tensorflow.org/models/tflite/conv_actions_tflite.zip'
+    dest new File(buildDir, '/tmp/conv_actions_tflite.zip')
+    onlyIfModified true
+    overwrite false
+}
+
+task downloadAndUnzipVrFile(dependsOn: downloadZipFile, type: Copy) {
+    from zipTree(downloadZipFile.dest)
+    into project.ext.ASSET_DIR + '/networks/voice'
+}
+
+preBuild.dependsOn([downloadNetworks, downloadAndUnzipVrFile])
