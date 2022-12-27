@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
+import org.openbot.env.IDataReceived;
 import org.tensorflow.lite.Interpreter;
 
 /**
@@ -70,6 +71,7 @@ public class VoiceRecognitionService extends Service {
   private final Interpreter.Options tfLiteOptions = new Interpreter.Options();
   private MappedByteBuffer tfLiteModel;
   private Interpreter tfLite;
+  private IDataReceived dataReceivedCallback;
 
   /** Memory-map the model file in Assets. */
   private static MappedByteBuffer loadModelFile(AssetManager assets, String modelFilename)
@@ -85,6 +87,7 @@ public class VoiceRecognitionService extends Service {
   private final IBinder binder = new LocalBinder();
 
   public class LocalBinder extends Binder {
+
     public VoiceRecognitionService getService() {
       return VoiceRecognitionService.this;
     }
@@ -99,6 +102,11 @@ public class VoiceRecognitionService extends Service {
   public void onCreate() {
 
     super.onCreate();
+
+    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+        != PackageManager.PERMISSION_GRANTED) {
+      throw new RuntimeException("RECORD_AUDIO permission missing");
+    }
 
     // Load the labels for the model, but only display those that don't start
     // with an underscore.
@@ -134,6 +142,7 @@ public class VoiceRecognitionService extends Service {
 
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
+    super.onStartCommand(intent, flags, startId);
     if (intent.getAction() != null) {
       switch (intent.getAction()) {
         case CMD_START_LISTEN:
@@ -145,6 +154,9 @@ public class VoiceRecognitionService extends Service {
           stopRecording();
           break;
       }
+    } else { // possible on system recreate ?
+      startRecording();
+      startRecognition();
     }
     return START_STICKY;
   }
@@ -198,17 +210,6 @@ public class VoiceRecognitionService extends Service {
     }
     short[] audioBuffer = new short[bufferSize / 2];
 
-    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
-        != PackageManager.PERMISSION_GRANTED) {
-      // TODO: Consider calling
-      //    ActivityCompat#requestPermissions
-      // here to request the missing permissions, and then overriding
-      //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-      //                                          int[] grantResults)
-      // to handle the case where the user grants the permission. See the documentation
-      // for ActivityCompat#requestPermissions for more details.
-      return;
-    }
     AudioRecord record =
         new AudioRecord(
             MediaRecorder.AudioSource.DEFAULT,
@@ -272,6 +273,15 @@ public class VoiceRecognitionService extends Service {
     recognitionThread = null;
   }
 
+  /**
+   * Callback to signal application on new recognized command
+   *
+   * @param dataCallback void proc(String)
+   */
+  public void setDataCallback(IDataReceived dataCallback) {
+    this.dataReceivedCallback = dataCallback;
+  }
+
   private void recognize() {
 
     short[] inputBuffer = new short[RECORDING_LENGTH];
@@ -325,9 +335,8 @@ public class VoiceRecognitionService extends Service {
 
         // If we do have a new command, send to bot control.
         if (result.isNewCommand && !result.foundCommand.startsWith("_")) {
-          // TODO: send found command to bot via a communication channel
-          //  e.g.  ControllerToBotEventBus.emitEvent(commandStr);
           Log.i("voice command found: ", result.foundCommand);
+          dataReceivedCallback.dataReceived(result.foundCommand);
         }
 
         try {

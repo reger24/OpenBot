@@ -79,9 +79,9 @@
             android:launchMode="singleTask" />
 
         <service
+          android:name=".env.voicerecog.VoiceRecognitionService"
           android:enabled="true"
-          android:exported="true"
-          android:name=".env.voicerecog.VoiceRecognitionService"/>
+          android:exported="false" />
 
         <service android:name="net.majorkernelpanic.streaming.rtsp.RtspServer"/>
 

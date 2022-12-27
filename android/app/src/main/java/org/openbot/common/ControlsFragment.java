@@ -1,6 +1,11 @@
 package org.openbot.common;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -17,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.preference.PreferenceManager;
 import java.io.File;
 import java.util.List;
 import java.util.Set;
@@ -28,8 +34,11 @@ import org.openbot.R;
 import org.openbot.env.AudioPlayer;
 import org.openbot.env.BotToControllerEventBus;
 import org.openbot.env.ControllerToBotEventBus;
+import org.openbot.env.IDataReceived;
 import org.openbot.env.PhoneController;
 import org.openbot.env.SharedPreferencesManager;
+import org.openbot.env.voicerecog.VoiceRecognitionService;
+import org.openbot.env.voicerecog.VoiceRecognitionService.LocalBinder;
 import org.openbot.main.MainViewModel;
 import org.openbot.server.ServerCommunication;
 import org.openbot.server.ServerListener;
@@ -45,6 +54,7 @@ import org.openbot.vehicle.Vehicle;
 import timber.log.Timber;
 
 public abstract class ControlsFragment extends Fragment implements ServerListener {
+
   private static final String NO_SERVER = "No server";
 
   protected MainViewModel mViewModel;
@@ -66,6 +76,19 @@ public abstract class ControlsFragment extends Fragment implements ServerListene
   private Spinner modelSpinner;
   private Spinner serverSpinner;
 
+  private boolean isBound_vrservice = false; // flag VoiceRecognitionService bound (up and running)
+  private ServiceConnection serviceconnection; // for local voice recognition service
+
+  /** Callback for the VoiceRecognitionService to submit new recognized voice commands */
+  public class ServiceDataReceived implements IDataReceived {
+
+    /** Called by the VRService on new recognized voice command */
+    @Override
+    public void dataReceived(String voicecommand) {
+      processVoiceRecognitionCommand(voicecommand);
+    }
+  }
+
   @Override
   public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
     super.onViewCreated(view, savedInstanceState);
@@ -76,6 +99,10 @@ public abstract class ControlsFragment extends Fragment implements ServerListene
     phoneController = PhoneController.getInstance(requireContext());
 
     preferencesManager = new SharedPreferencesManager(requireContext());
+    boolean tmpflag =
+        PreferenceManager.getDefaultSharedPreferences(requireContext())
+            .getBoolean("vrservice", false);
+    if (tmpflag) activateVoiceService(true);
     audioPlayer = new AudioPlayer(requireContext());
     masterList = FileUtils.loadConfigJSONFromAsset(requireActivity());
     serverCommunication = new ServerCommunication(requireContext(), this);
@@ -317,6 +344,7 @@ public abstract class ControlsFragment extends Fragment implements ServerListene
     Timber.d("onDestroy");
     ControllerToBotEventBus.unsubscribe(this.getClass().getSimpleName());
     vehicle.setControl(0, 0);
+    activateVoiceService(false);
     super.onDestroy();
   }
 
@@ -458,4 +486,99 @@ public abstract class ControlsFragment extends Fragment implements ServerListene
   protected abstract void processControllerKeyData(String command);
 
   protected abstract void processUSBData(String data);
+
+  /**
+   * Activate and bind or deactivate and unbind the voice recognition service
+   *
+   * @param setOn true=start voice recognition, false=stop voice recognition service
+   */
+  public void activateVoiceService(boolean setOn) {
+    if (setOn) {
+      if (!isBound_vrservice) {
+        serviceconnection =
+            new ServiceConnection() {
+              private VoiceRecognitionService vrservice;
+
+              @Override
+              public void onServiceConnected(ComponentName className, IBinder service) {
+                LocalBinder binder = (LocalBinder) service;
+                vrservice = binder.getService();
+                vrservice.setDataCallback(new ServiceDataReceived());
+                vrservice.startRecording();
+                vrservice.startRecognition();
+                isBound_vrservice = true;
+              }
+
+              @Override
+              public void onServiceDisconnected(ComponentName arg0) {
+                isBound_vrservice = false;
+                vrservice.stopRecognition();
+                vrservice.stopRecording();
+                vrservice.stopSelf();
+              }
+            };
+      }
+      Intent intent = new Intent(requireContext(), VoiceRecognitionService.class);
+      requireContext().bindService(intent, serviceconnection, Context.BIND_AUTO_CREATE);
+    } else {
+      if (isBound_vrservice) {
+        requireContext().unbindService(serviceconnection);
+      }
+    }
+  }
+
+  /**
+   * Covert/translate voice commands into bot controls and send to bot
+   *
+   * @param voicecommand the recognized command
+   */
+  protected void processVoiceRecognitionCommand(String voicecommand) {
+    if (isBound_vrservice) {
+      float left = 0.0f;
+      float right = 0.0f;
+      switch (voicecommand) {
+        case "stop":
+          left = 0.0f;
+          right = 0.0f;
+          break;
+        case "go":
+          left = 0.5f;
+          right = 0.5f;
+          break;
+        case "left":
+          left = 0.5f;
+          right = 0.0f;
+          break;
+        case "right":
+          left = 0.0f;
+          right = 0.5f;
+          break;
+        case "yes":
+          left = vehicle.getControl().getLeft();
+          right = vehicle.getControl().getRight();
+          break;
+        case "no":
+          left = 0.0f;
+          right = 0.0f;
+          break;
+        case "up":
+          left = vehicle.getControl().getLeft() * 1.2f;
+          right = vehicle.getControl().getRight() * 1.2f;
+          break;
+        case "down":
+          left = vehicle.getControl().getLeft() * 0.8f;
+          right = vehicle.getControl().getRight() * 0.8f;
+          break;
+        case "on":
+          left = 0.5f;
+          right = 0.5f;
+          break;
+        case "off":
+          left = 0.0f;
+          right = 0.0f;
+          break;
+      }
+      vehicle.setControl(left, right);
+    }
+  }
 }

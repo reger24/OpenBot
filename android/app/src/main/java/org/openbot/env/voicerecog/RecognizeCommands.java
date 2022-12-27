@@ -139,16 +139,16 @@ public class RecognizeCommands {
     final long earliestTime = previousResults.getFirst().first;
     final long samplesDuration = currentTimeMS - earliestTime;
 
-    Log.v("Number of Results: ", String.valueOf(howManyResults));
+    Log.d("Number of Results: ", String.valueOf(howManyResults));
 
-    Log.v(
+    Log.d(
         "Duration < WD/FRAC?",
         String.valueOf((samplesDuration < (averageWindowDurationMs / MINIMUM_TIME_FRACTION))));
 
     if ((howManyResults < minimumCount)
     //        || (samplesDuration < (averageWindowDurationMs / MINIMUM_TIME_FRACTION))
     ) {
-      Log.v("RecognizeResult", "Too few results");
+      Log.d("RecognizeResult", "Too few results");
       return new RecognitionResult(previousTopLabel, 0.0f, false);
     }
 
