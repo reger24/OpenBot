@@ -14,9 +14,14 @@ import android.os.IBinder;
 import android.util.Log;
 import androidx.core.app.ActivityCompat;
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -24,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
+import org.openbot.OpenBotApplication;
 import org.openbot.env.IDataReceived;
 import org.tensorflow.lite.Interpreter;
 
@@ -71,7 +77,7 @@ public class VoiceRecognitionService extends Service {
   private final Interpreter.Options tfLiteOptions = new Interpreter.Options();
   private MappedByteBuffer tfLiteModel;
   private Interpreter tfLite;
-  private IDataReceived dataReceivedCallback;
+  private IDataReceived dataReceivedCallback; // callback to notify on new recognized command
 
   /** Memory-map the model file in Assets. */
   private static MappedByteBuffer loadModelFile(AssetManager assets, String modelFilename)
@@ -337,6 +343,14 @@ public class VoiceRecognitionService extends Service {
         if (result.isNewCommand && !result.foundCommand.startsWith("_")) {
           Log.i("voice command found: ", result.foundCommand);
           dataReceivedCallback.dataReceived(result.foundCommand);
+          // TODO: create wav for debugging and noise analysis (remove in final code)
+          createWaveFile(
+              SAMPLE_RATE,
+              (short) 16,
+              (short) 1,
+              SAMPLE_DURATION_MS / 1000,
+              new File(OpenBotApplication.getContext().getFilesDir(), result.foundCommand + ".wav"),
+              inputBuffer);
         }
 
         try {
@@ -366,5 +380,64 @@ public class VoiceRecognitionService extends Service {
 
   public boolean isListen() {
     return shouldContinue;
+  }
+
+  /**
+   * Write recorded audio buffer to wav file,
+   *
+   * @param sampleRate sample frequency
+   * @param sampleSize bit size of one value (short = 16)
+   * @param channels mono =1 or stereo =2
+   * @param duration recording length in sec
+   * @param file output file
+   * @param srcarray array to write to file
+   * @throws IOException
+   */
+  public void createWaveFile(
+      int sampleRate, short sampleSize, short channels, int duration, File file, short[] srcarray) {
+    // example: createWaveFile(SAMPLE_RATE, (short) 16,(short) 1, SAMPLE_DURATION_MS / 1000, new
+    // File(OpenBotApplication.getContext().getFilesDir(),result.foundCommand + ".wav"),
+    // inputBuffer);
+    // calculate some wav header values
+    short blockAlign = (short) (sampleSize * channels / 8);
+    int byteRate = sampleRate * sampleSize * channels / 8;
+    int audioSize = byteRate * duration;
+    int fileSize = audioSize + 44;
+
+    // convert short to byte array
+    /*   byte[] audioData = new byte[audioSize];
+    for (int n=0; n < srcarray.length; n++) {
+      byte lsb = (byte) (srcarray[n] & 0xff);
+      byte msb = (byte) ((srcarray[n] >> 8) & 0xff);
+        audioData[2*n]   = lsb;
+        audioData[2*n+1] = msb;
+    }    */
+    ByteBuffer buffer = ByteBuffer.allocate(srcarray.length * 2);
+    buffer.order(ByteOrder.LITTLE_ENDIAN);
+    buffer.asShortBuffer().put(srcarray);
+    byte[] audioData = buffer.array();
+    try {
+      DataOutputStream out = new DataOutputStream(new FileOutputStream(file));
+      // Write wav Header
+      out.writeBytes("RIFF"); // 0-4 ChunkId always RIFF
+      out.writeInt(
+          Integer.reverseBytes(fileSize)); // 5-8 ChunkSize always audio-length +header-length(44)
+      out.writeBytes("WAVE"); // 9-12 Format always WAVE
+      out.writeBytes("fmt "); // 13-16 Subchunk1 ID always "fmt " with trailing whitespace
+      out.writeInt(Integer.reverseBytes(16)); // 17-20 Subchunk1 Size always 16
+      out.writeShort(Short.reverseBytes((short) 1)); // 21-22 Audio-Format 1 for PCM PulseAudio
+      out.writeShort(Short.reverseBytes(channels)); // 23-24 Num-Channels 1 for mono, 2 for stereo
+      out.writeInt(Integer.reverseBytes(sampleRate)); // 25-28 Sample-Rate
+      out.writeInt(Integer.reverseBytes(byteRate)); // 29-32 Byte Rate
+      out.writeShort(Short.reverseBytes(blockAlign)); // 33-34 Block Align
+      out.writeShort(Short.reverseBytes(sampleSize)); // 35-36 Bits-Per-Sample
+      out.writeBytes("data"); // 37-40 Subchunk2 ID always data
+      out.writeInt(Integer.reverseBytes(audioSize)); // 41-44 Subchunk 2 Size audio-length
+
+      out.write(audioData);
+      out.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 }
