@@ -9,6 +9,7 @@ import android.content.res.AssetManager;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.media.audiofx.NoiseSuppressor;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
@@ -78,6 +79,7 @@ public class VoiceRecognitionService extends Service {
   private MappedByteBuffer tfLiteModel;
   private Interpreter tfLite;
   private IDataReceived dataReceivedCallback; // callback to notify on new recognized command
+  private NoiseSuppressor ns;
 
   /** Memory-map the model file in Assets. */
   private static MappedByteBuffer loadModelFile(AssetManager assets, String modelFilename)
@@ -218,7 +220,7 @@ public class VoiceRecognitionService extends Service {
 
     AudioRecord record =
         new AudioRecord(
-            MediaRecorder.AudioSource.DEFAULT,
+            MediaRecorder.AudioSource.VOICE_RECOGNITION,
             SAMPLE_RATE,
             AudioFormat.CHANNEL_IN_MONO,
             AudioFormat.ENCODING_PCM_16BIT,
@@ -228,6 +230,12 @@ public class VoiceRecognitionService extends Service {
       return;
     }
 
+    // System noise suppressor
+    if (NoiseSuppressor.isAvailable ()) {
+      ns = NoiseSuppressor.create(record.getAudioSessionId());
+      boolean nson = ns.getEnabled();
+      if (!nson) ns.setEnabled(true);
+    }
     record.startRecording();
 
     // Loop, gathering audio data and copying it to a round-robin buffer.
@@ -253,6 +261,7 @@ public class VoiceRecognitionService extends Service {
 
     record.stop();
     record.release();
+    if (ns != null) ns.release();
   }
 
   public synchronized void startRecognition() {
