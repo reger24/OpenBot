@@ -47,6 +47,17 @@
         app:layout_constraintStart_toEndOf="@+id/battery"
         app:layout_constraintTop_toBottomOf="@+id/speed" />
 
+    <CheckBox
+      android:id="@+id/headsetToggle"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:button="@drawable/ic_headset"
+      android:buttonTint="@color/colorPrimary"
+      android:checked="true"
+      android:tooltipText="BT headset is enabled"
+      android:visibility="invisible"
+      app:layout_constraintEnd_toEndOf="@id/speed"
+      app:layout_constraintTop_toBottomOf="@+id/speed" />
 
     <ProgressBar
         android:id="@+id/sonar"

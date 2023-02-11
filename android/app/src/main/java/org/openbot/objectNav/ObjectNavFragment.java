@@ -640,15 +640,18 @@ public class ObjectNavFragment extends CameraFragment {
           // android.util.AndroidRuntimeException: Animators may only be run on Looper threads
           requireActivity().runOnUiThread(() -> binding.autoSwitch.setChecked(true));
         }
+        break;
 
       case "off":
         if (binding.autoSwitch.isChecked()) {
           requireActivity().runOnUiThread(() -> binding.autoSwitch.setChecked(false));
         }
         vehicle.stopBot();
+        break;
 
       default:
         super.processVoiceRecognitionCommand(voicecommand);
+        break;
     }
   }
 }

@@ -97,6 +97,10 @@ public class FreeRoamFragment extends ControlsFragment {
           binding.usbToggle.setChecked(vehicle.isUsbConnected());
           Navigation.findNavController(requireView()).navigate(R.id.open_settings_fragment);
         });
+
+    if (isBluetoothHeadsetConnected()) {
+      binding.headsetToggle.setVisibility(View.VISIBLE);
+    }
   }
 
   @Override
@@ -287,5 +291,16 @@ public class FreeRoamFragment extends ControlsFragment {
                 Enums.SpeedMode.getByID(preferencesManager.getSpeedMode())));
         break;
     }
+  }
+
+  @Override
+  protected void processVoiceRecognitionCommand(String voicecommand) {
+    super.processVoiceRecognitionCommand(voicecommand);
+    requireActivity().runOnUiThread(new Runnable() {
+      @Override
+      public void run() {
+        handleDriveCommand();
+      }
+    });
   }
 }

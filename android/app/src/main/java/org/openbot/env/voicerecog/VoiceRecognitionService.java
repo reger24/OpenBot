@@ -261,10 +261,8 @@ public class VoiceRecognitionService extends Service {
           },
           new IntentFilter(AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED));
     }
-    if (btHeadsetConnected) {
-      Timber.i("Starting audio via bluetooth headset");
-      audioManager.startBluetoothSco();
-    }
+    Timber.i("Starting audio via bluetooth headset");
+    audioManager.startBluetoothSco();
   }
 
   /** Called in own thread, continuous fills buffer with recorded audio */
