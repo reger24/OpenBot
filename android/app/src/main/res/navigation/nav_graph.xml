@@ -22,6 +22,7 @@
         <action
             android:id="@+id/action_mainFragment_to_controllerMappingFragment"
             app:destination="@id/controllerMappingFragment" />
+
         <action
             android:id="@+id/action_mainFragment_to_objectNavFragment"
             app:destination="@id/objectNavFragment" />
@@ -34,7 +35,15 @@
         <action
             android:id="@+id/action_mainFragment_to_robotInfoFragment"
             app:destination="@id/robotInfoFragment" />
+        <action android:id="@+id/action_mainFragment_to_voicecommandfragment"
+          app:destination="@id/voicecommandfragment" />
     </fragment>
+
+    <fragment android:id="@+id/voicecommandfragment"
+      android:name="org.openbot.controller.VoiceCommandMappingFragment"
+      android:label="Voice Commands">
+    </fragment>
+
     <fragment
         android:id="@+id/freeRoamFragment"
         android:name="org.openbot.robot.FreeRoamFragment"
@@ -86,4 +95,5 @@
         android:id="@+id/robotInfoFragment"
         android:name="org.openbot.robot.RobotInfoFragment"
         android:label="RobotInfoFragment" />
+
 </navigation>

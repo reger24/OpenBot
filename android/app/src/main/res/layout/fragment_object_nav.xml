@@ -301,6 +301,18 @@
             app:layout_constraintEnd_toStartOf="@+id/camera_toggle"
             app:layout_constraintTop_toTopOf="@+id/camera_toggle" />
 
+        <CheckBox
+          android:id="@+id/headsetToggle"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginEnd="16dp"
+          android:button="@drawable/ic_headset"
+          android:buttonTint="@color/colorPrimary"
+          android:visibility="invisible"
+          app:layout_constraintBottom_toBottomOf="@+id/usbToggle"
+          app:layout_constraintEnd_toStartOf="@+id/usbToggle"
+          app:layout_constraintTop_toTopOf="@+id/usbToggle" />
+
         <ImageView
             android:id="@+id/camera_toggle"
             android:layout_width="40dp"

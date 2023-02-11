@@ -185,6 +185,11 @@ public class ObjectNavFragment extends CameraFragment {
           Navigation.findNavController(requireView()).navigate(R.id.open_settings_fragment);
         });
 
+    if (isBluetoothHeadsetConnected()) {
+      binding.headsetToggle.setVisibility(View.VISIBLE);
+      binding.headsetToggle.setChecked(isBluetoothHeadsetConnected());
+    }
+
     setSpeedMode(Enums.SpeedMode.getByID(preferencesManager.getSpeedMode()));
     setControlMode(Enums.ControlMode.getByID(preferencesManager.getControlMode()));
     setDriveMode(Enums.DriveMode.getByID(preferencesManager.getDriveMode()));
@@ -618,5 +623,32 @@ public class ObjectNavFragment extends CameraFragment {
     setDriveMode(Enums.DriveMode.getByID(preferencesManager.getDriveMode()));
     binding.controllerContainer.driveMode.setEnabled(true);
     binding.controllerContainer.driveMode.setAlpha(1.0f);
+  }
+
+  /**
+   * Pre-process voice recognition commands, to switch automode on or off and forward to super for
+   * the specific drive command interpretation
+   *
+   * @param voicecommand received from vrservice
+   */
+  @Override
+  protected void processVoiceRecognitionCommand(String voicecommand) {
+    switch (voicecommand) {
+      case "on":
+        if (!binding.autoSwitch.isChecked()) {
+          // must run in own looper thread otherwise runtime exception
+          // android.util.AndroidRuntimeException: Animators may only be run on Looper threads
+          requireActivity().runOnUiThread(() -> binding.autoSwitch.setChecked(true));
+        }
+
+      case "off":
+        if (binding.autoSwitch.isChecked()) {
+          requireActivity().runOnUiThread(() -> binding.autoSwitch.setChecked(false));
+        }
+        vehicle.stopBot();
+
+      default:
+        super.processVoiceRecognitionCommand(voicecommand);
+    }
   }
 }

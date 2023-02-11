@@ -1,5 +1,7 @@
 package org.openbot.common;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothHeadset;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -76,11 +78,12 @@ public abstract class ControlsFragment extends Fragment implements ServerListene
   private Spinner modelSpinner;
   private Spinner serverSpinner;
 
-  private boolean isBound_vrservice = false; // flag VoiceRecognitionService bound (up and running)
-  private ServiceConnection serviceconnection; // for local voice recognition service
+  protected boolean isBound_vrservice =
+      false; // flag VoiceRecognitionService bound (up and running)
+  protected ServiceConnection vrserviceconnection; // for local voice recognition service
 
   /** Callback for the VoiceRecognitionService to submit new recognized voice commands */
-  public class ServiceDataReceived implements IDataReceived {
+  public class VRServiceDataReceived implements IDataReceived {
 
     /** Called by the VRService on new recognized voice command */
     @Override
@@ -488,6 +491,19 @@ public abstract class ControlsFragment extends Fragment implements ServerListene
   protected abstract void processUSBData(String data);
 
   /**
+   * Get status of Bluetooth Headset available and ready to use (connected)
+   *
+   * @return true if Bluetooth Headset is connected
+   */
+  protected boolean isBluetoothHeadsetConnected() {
+    BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    return mBluetoothAdapter != null
+        && mBluetoothAdapter.isEnabled()
+        && mBluetoothAdapter.getProfileConnectionState(BluetoothHeadset.HEADSET)
+            == BluetoothHeadset.STATE_CONNECTED;
+  }
+
+  /**
    * Activate and bind or deactivate and unbind the voice recognition service
    *
    * @param setOn true=start voice recognition, false=stop voice recognition service
@@ -495,7 +511,7 @@ public abstract class ControlsFragment extends Fragment implements ServerListene
   public void activateVoiceService(boolean setOn) {
     if (setOn) {
       if (!isBound_vrservice) {
-        serviceconnection =
+        vrserviceconnection =
             new ServiceConnection() {
               private VoiceRecognitionService vrservice;
 
@@ -503,7 +519,7 @@ public abstract class ControlsFragment extends Fragment implements ServerListene
               public void onServiceConnected(ComponentName className, IBinder service) {
                 LocalBinder binder = (LocalBinder) service;
                 vrservice = binder.getService();
-                vrservice.setDataCallback(new ServiceDataReceived());
+                vrservice.setDataCallback(new VRServiceDataReceived());
                 vrservice.startRecording();
                 vrservice.startRecognition();
                 isBound_vrservice = true;
@@ -519,10 +535,10 @@ public abstract class ControlsFragment extends Fragment implements ServerListene
             };
       }
       Intent intent = new Intent(requireContext(), VoiceRecognitionService.class);
-      requireContext().bindService(intent, serviceconnection, Context.BIND_AUTO_CREATE);
+      requireContext().bindService(intent, vrserviceconnection, Context.BIND_AUTO_CREATE);
     } else {
       if (isBound_vrservice) {
-        requireContext().unbindService(serviceconnection);
+        requireContext().unbindService(vrserviceconnection);
       }
     }
   }
@@ -532,53 +548,75 @@ public abstract class ControlsFragment extends Fragment implements ServerListene
    *
    * @param voicecommand the recognized command
    */
+  String lastvoicecommand = ""; // to remember last command
+
   protected void processVoiceRecognitionCommand(String voicecommand) {
     if (isBound_vrservice) {
-      float left = 0.0f;
-      float right = 0.0f;
-      switch (voicecommand) {
-        case "stop":
+      float left = 0f;
+      float right = 0f;
+
+      String activevoicecommand;
+      if (voicecommand.equals("yes")) {
+        activevoicecommand = lastvoicecommand; // repeat last command
+      } else {
+        activevoicecommand = voicecommand;
+        lastvoicecommand = voicecommand; // remember last command
+      }
+
+      switch (activevoicecommand) {
+        case "stop": // stop robot
           left = 0.0f;
           right = 0.0f;
           break;
-        case "go":
-          left = 0.5f;
-          right = 0.5f;
+        case "go": // go forward
+          if (vehicle.getControl().getLeft() + vehicle.getControl().getRight() > 0) {
+            left = vehicle.getControl().getLeft() + 0.25f;
+            right = vehicle.getControl().getRight() + 0.25f;
+          } else {
+            left = 0.5f;
+            right = 0.5f;
+          }
           break;
-        case "left":
-          left = 0.5f;
-          right = 0.0f;
+        case "left": // increase left turning
+          left = vehicle.getControl().getLeft() - 0.25f;
+          right = vehicle.getControl().getRight() + 0.25f;
           break;
-        case "right":
-          left = 0.0f;
-          right = 0.5f;
+        case "right": // increase right turning
+          left = vehicle.getControl().getLeft() + 0.25f;
+          right = vehicle.getControl().getRight() - 0.25f;
           break;
-        case "yes":
-          left = vehicle.getControl().getLeft();
-          right = vehicle.getControl().getRight();
+        case "yes": // repeat last command
+          // already handled
           break;
-        case "no":
-          left = 0.0f;
-          right = 0.0f;
+        case "no": // go backward (if not aleardy moving) or reverse direction
+          if (vehicle.getControl().getLeft() + vehicle.getControl().getRight() > 0) {
+            left = -vehicle.getControl().getLeft();
+            right = -vehicle.getControl().getRight();
+          } else {
+            left = -0.5f;
+            right = -0.5f;
+          }
           break;
-        case "up":
+        case "up": // increase speed
           left = vehicle.getControl().getLeft() * 1.2f;
           right = vehicle.getControl().getRight() * 1.2f;
           break;
-        case "down":
+        case "down": // decrease speed
           left = vehicle.getControl().getLeft() * 0.8f;
           right = vehicle.getControl().getRight() * 0.8f;
           break;
-        case "on":
+        case "on": // go forward
           left = 0.5f;
           right = 0.5f;
           break;
-        case "off":
+        case "off": // stop robot
           left = 0.0f;
           right = 0.0f;
           break;
       }
       vehicle.setControl(left, right);
+    } else {
+      Toast.makeText(getContext(), "voice recognition not activated", Toast.LENGTH_LONG).show();
     }
   }
 }

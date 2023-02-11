@@ -2,17 +2,23 @@ package org.openbot.env.voicerecog;
 
 import android.Manifest;
 import android.app.Service;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothHeadset;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 import android.media.AudioRecord;
-import android.media.MediaRecorder;
+import android.media.MediaRecorder.AudioSource;
 import android.media.audiofx.NoiseSuppressor;
 import android.os.Binder;
 import android.os.IBinder;
-import android.util.Log;
+import android.widget.Toast;
 import androidx.core.app.ActivityCompat;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -30,9 +36,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
-import org.openbot.OpenBotApplication;
 import org.openbot.env.IDataReceived;
+import org.openbot.env.SharedPreferencesManager;
 import org.tensorflow.lite.Interpreter;
+import timber.log.Timber;
 
 /**
  * A service that listens for audio and then uses a TensorFlow model to detect particular classes,
@@ -79,7 +86,8 @@ public class VoiceRecognitionService extends Service {
   private MappedByteBuffer tfLiteModel;
   private Interpreter tfLite;
   private IDataReceived dataReceivedCallback; // callback to notify on new recognized command
-  private NoiseSuppressor ns;
+  private AudioManager audioManager; // use to enable Bluetooth headset as audio source
+  private boolean btHeadsetConnected = false; // Bluetooth headset status
 
   /** Memory-map the model file in Assets. */
   private static MappedByteBuffer loadModelFile(AssetManager assets, String modelFilename)
@@ -116,8 +124,7 @@ public class VoiceRecognitionService extends Service {
       throw new RuntimeException("RECORD_AUDIO permission missing");
     }
 
-    // Load the labels for the model, but only display those that don't start
-    // with an underscore.
+    // Load the labels for the voice recognition model
     try {
       BufferedReader br =
           new BufferedReader(new InputStreamReader(getAssets().open(LABEL_FILENAME)));
@@ -146,6 +153,12 @@ public class VoiceRecognitionService extends Service {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+    // enable Bluetooth headset (recommended for voice recognition due to disturbance by robot
+    // motors
+    if (getSharedPreferences(SharedPreferencesManager.PREFERENCES_NAME, Context.MODE_PRIVATE)
+        .getBoolean(SharedPreferencesManager.BT_HEADSET, true)) {
+      enableBTHeadset();
+    }
   }
 
   @Override
@@ -154,6 +167,10 @@ public class VoiceRecognitionService extends Service {
     if (intent.getAction() != null) {
       switch (intent.getAction()) {
         case CMD_START_LISTEN:
+          if (getSharedPreferences(SharedPreferencesManager.PREFERENCES_NAME, Context.MODE_PRIVATE)
+              .getBoolean(SharedPreferencesManager.BT_HEADSET, true)) {
+            enableBTHeadset();
+          }
           startRecording();
           startRecognition();
           break;
@@ -163,6 +180,10 @@ public class VoiceRecognitionService extends Service {
           break;
       }
     } else { // possible on system recreate ?
+      if (getSharedPreferences(SharedPreferencesManager.PREFERENCES_NAME, Context.MODE_PRIVATE)
+          .getBoolean(SharedPreferencesManager.BT_HEADSET, true)) {
+        enableBTHeadset();
+      }
       startRecording();
       startRecognition();
     }
@@ -171,6 +192,10 @@ public class VoiceRecognitionService extends Service {
 
   @Override
   public void onDestroy() {
+    if (audioManager != null && btHeadsetConnected) {
+      audioManager.stopBluetoothSco();
+      // unregisterReceiver(null);
+    }
     stopRecognition();
     stopRecording();
     super.onDestroy();
@@ -205,6 +230,43 @@ public class VoiceRecognitionService extends Service {
     recordingThread = null;
   }
 
+  /** Enable Bluetooth Headset for audio/voice commands */
+  private void enableBTHeadset() {
+
+    audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+    if (!audioManager.isBluetoothScoAvailableOffCall()) {
+      Toast.makeText(
+              getBaseContext(), "Bluetooth headset not supported on this phone", Toast.LENGTH_LONG)
+          .show();
+      audioManager = null;
+      return;
+    }
+
+    if (!btHeadsetConnected) { // initally set callback for Bluetooth headset state
+      registerReceiver(
+          new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context context, Intent intent) {
+              int state = intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_STATE, -1);
+              Timber.d("Audio SCO state: " + state);
+              if (AudioManager.SCO_AUDIO_STATE_CONNECTED == state) {
+                btHeadsetConnected = true;
+                Timber.d("SCO audio connected");
+              } else if (state == AudioManager.SCO_AUDIO_STATE_DISCONNECTED) {
+                btHeadsetConnected = false;
+                Timber.d("SCO audio disconnected");
+              }
+            }
+          },
+          new IntentFilter(AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED));
+    }
+    if (btHeadsetConnected) {
+      Timber.i("Starting audio via bluetooth headset");
+      audioManager.startBluetoothSco();
+    }
+  }
+
   /** Called in own thread, continuous fills buffer with recorded audio */
   private void record() {
     android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_AUDIO);
@@ -220,7 +282,7 @@ public class VoiceRecognitionService extends Service {
 
     AudioRecord record =
         new AudioRecord(
-            MediaRecorder.AudioSource.VOICE_RECOGNITION,
+            AudioSource.VOICE_RECOGNITION,
             SAMPLE_RATE,
             AudioFormat.CHANNEL_IN_MONO,
             AudioFormat.ENCODING_PCM_16BIT,
@@ -230,12 +292,6 @@ public class VoiceRecognitionService extends Service {
       return;
     }
 
-    // System noise suppressor
-    if (NoiseSuppressor.isAvailable ()) {
-      ns = NoiseSuppressor.create(record.getAudioSessionId());
-      boolean nson = ns.getEnabled();
-      if (!nson) ns.setEnabled(true);
-    }
     record.startRecording();
 
     // Loop, gathering audio data and copying it to a round-robin buffer.
@@ -261,7 +317,6 @@ public class VoiceRecognitionService extends Service {
 
     record.stop();
     record.release();
-    if (ns != null) ns.release();
   }
 
   public synchronized void startRecognition() {
@@ -330,7 +385,7 @@ public class VoiceRecognitionService extends Service {
         if (inputBuffer[i] > maxbufval) maxbufval = inputBuffer[i];
         if (inputBuffer[i] < minbufval) minbufval = inputBuffer[i];
       }
-      if (maxbufval - minbufval > 2000) { // avoid recognition on low level noise
+      if (maxbufval - minbufval != 000) { // avoid recognition on low level noise
         Object[] inputArray = {floatInputBuffer, sampleRateList};
         Map<Integer, Object> outputMap = new HashMap<>();
         outputMap.put(0, outputScores);
@@ -350,16 +405,8 @@ public class VoiceRecognitionService extends Service {
 
         // If we do have a new command, send to bot control.
         if (result.isNewCommand && !result.foundCommand.startsWith("_")) {
-          Log.i("voice command found: ", result.foundCommand);
+          Timber.d("voice command found: " + result.foundCommand);
           dataReceivedCallback.dataReceived(result.foundCommand);
-          // TODO: create wav for debugging and noise analysis (remove in final code)
-          createWaveFile(
-              SAMPLE_RATE,
-              (short) 16,
-              (short) 1,
-              SAMPLE_DURATION_MS / 1000,
-              new File(OpenBotApplication.getContext().getFilesDir(), result.foundCommand + ".wav"),
-              inputBuffer);
         }
 
         try {

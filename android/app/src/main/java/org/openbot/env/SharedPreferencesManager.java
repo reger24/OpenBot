@@ -7,7 +7,7 @@ import org.openbot.utils.Enums;
 
 public class SharedPreferencesManager {
 
-  private static final String PREFERENCES_NAME = "openbot_settings";
+  public static final String PREFERENCES_NAME = "openbot_settings";
   private static final int DEFAULT_BAUD_RATE = 115200;
   private static final String BAUD_RATE = "BAUD_RATE";
   private static final int DEFAULT_LOG_MODE = Enums.LogMode.CROP_IMG.ordinal();
@@ -34,6 +34,8 @@ public class SharedPreferencesManager {
   private static final String CAMERA_SWITCH = "CAMERA_SWITCH";
   private static final String SHEET_EXPANDED = "SHEET_EXPANDED";
   private static final String DELAY = "DELAY";
+
+  public static final String BT_HEADSET = "btheadset";
 
   private final SharedPreferences preferences;
 

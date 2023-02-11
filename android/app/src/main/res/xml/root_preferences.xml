@@ -50,8 +50,14 @@
     <PreferenceCategory app:title="Experimental Features">
 
         <SwitchPreferenceCompat
+            app:icon="@drawable/ic_voice_over"
             app:key="vrservice"
             app:title="Voice Recognition" />
+
+        <SwitchPreferenceCompat
+          app:icon="@drawable/ic_headset"
+          app:key="btheadset"
+          app:title="Use Bluetooth Headset" />
 
     </PreferenceCategory>
 

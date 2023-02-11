@@ -16,6 +16,7 @@ public class FeatureList {
   public static final String DEFAULT = "Default";
   public static final String CONTROLLER = "Controller";
   public static final String CONTROLLER_MAPPING = "Controller Mapping";
+  public static final String VOICE_COMMAND_INFO = "Voice Recognition Commands";
   public static final String ROBOT_INFO = "Robot Info";
 
   // Game
@@ -87,6 +88,7 @@ public class FeatureList {
     subCategories.add(
         new SubCategory(POINT_GOAL_NAVIGATION, R.drawable.ic_baseline_golf_course, "#1BBFBF"));
     subCategories.add(new SubCategory(MODEL_MANAGEMENT, R.drawable.ic_list_bulleted_48, "#FFAC6C"));
+    subCategories.add(new SubCategory(VOICE_COMMAND_INFO, R.drawable.ic_voice_over, "#7268A6"));
     categories.add(new Category(AI, subCategories));
 
     //    subCategories = new ArrayList<>();
