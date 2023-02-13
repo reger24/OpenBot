@@ -2,7 +2,7 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
-  android:background="#00000000">
+  xmlns:app="http://schemas.android.com/apk/res-auto">
 
   <RelativeLayout
     android:layout_width="match_parent"
@@ -14,17 +14,6 @@
       android:layout_height="?attr/actionBarSize"
       android:layout_alignParentTop="true"
       android:background="@android:color/white">
-
-      <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_voice_over" />
-      <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:text="Voice commands / mapping"
-        android:textSize="16sp" />
       <CheckBox
         android:id="@+id/headsetToggle"
         android:layout_width="wrap_content"
@@ -34,193 +23,614 @@
         android:button="@drawable/ic_headset"
         android:buttonTint="@color/colorPrimary"
         android:checked="true"
-        android:visibility="invisible"
-        android:tooltipText="BT headset is enabled" />
-
+        android:tooltipText="BT headset is enabled"
+        android:visibility="invisible" />
+      <ImageView
+        android:id="@+id/titleicon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_voice_over" />
+      <TextView
+        android:id="@+id/titletxt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="Voice command mapping"
+        android:textSize="20sp" />
     </androidx.appcompat.widget.Toolbar>
 
     <TextView
-      android:id="@+id/textView"
+      android:id="@+id/introtxt"
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:layout_below="@+id/toolbar"
       android:layout_gravity="center"
       android:padding="10dp"
       android:background="@color/colorPrimaryDark"
-      android:text="Say one of the key words (upper case) below!"
+      android:text="Say one of the key words below!"
       android:textAlignment="center"
       android:textColor="@android:color/white"
       android:textSize="16dp" />
 
-    <LinearLayout
+    <TableLayout
+      android:id="@+id/mappingtable"
       android:layout_width="match_parent"
       android:layout_height="match_parent"
-      android:layout_below="@+id/textView"
-      android:layout_marginBottom="100dp"
+      android:layout_marginLeft="4dp"
+      android:layout_below="@id/introtxt"
       android:orientation="vertical"
-      android:weightSum="5">
+      android:weightSum="10">
 
-
-      <LinearLayout
+      <TableRow
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="horizontal"
-        android:weightSum="1">
+        android:weightSum="4">
+        <TextView
+          android:id="@+id/yes_operator9"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/yes_leftspeed"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="Op"
+          android:textAlignment="center" />
+        <TextView
+          android:id="@+id/leftspeedcollabel"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:layout_column="1"
+          android:layout_gravity="start"
+          android:layout_span="2"
+          android:padding="2dp"
+          android:maxLines="2"
+          android:singleLine="false"
+          android:text="Speed factor\nleft / right" />
+        <TextView
+          android:id="@+id/keywordcoltitle"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:layout_gravity="start"
+          android:padding="2dp"
+          android:minWidth="48dp"
+          android:text="Keyword" />
+        <TextView
+          android:id="@+id/mappingcoltitle"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:layout_gravity="start"
+          android:padding="2dp"
+          android:text="Mapping" />
+      </TableRow>
 
+      <TableRow
+        android:id="@+id/yes_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:weightSum="4">
+        <TextView
+          android:id="@+id/yes_operator"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/yes_leftspeed"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="x"
+          android:textAlignment="center" />
+        <EditText
+          android:id="@+id/yes_leftspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_column="1"
+          android:layout_gravity="start"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:text="1" />
+        <EditText
+          android:id="@+id/yes_rightspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_column="2"
+          android:layout_gravity="start"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:text="1" />
         <TextView
           android:id="@+id/yes"
-          android:layout_width="0dp"
-          android:layout_height="match_parent"
-          android:layout_weight=".5"
-          android:layout_margin="10dp"
-          android:background="@drawable/bottom_sheet_bg"
-          android:gravity="center"
-          android:lines="2"
-          android:text="YES\nrepeat last command"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/yes_leftspeed"
+          android:minHeight="32dp"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="Yes"
           android:textAlignment="center" />
+        <TextView
+          android:id="@+id/yes_mappingtxt"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:layout_column="3"
+          android:layout_gravity="start"
+          android:maxLines="2"
+          android:singleLine="false"
+          android:text="repeat last command" />
+      </TableRow>
 
+      <TableRow
+        android:id="@+id/no_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:weightSum="4">
+        <TextView
+          android:id="@+id/yes_operator2"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/yes_leftspeed"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="x"
+          android:textAlignment="center" />
+        <EditText
+          android:id="@+id/no_leftspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_column="1"
+          android:layout_gravity="start"
+          android:layout_span="2"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:text="-1" />
         <TextView
           android:id="@+id/no"
-          android:layout_width="0dp"
-          android:layout_height="match_parent"
-          android:layout_margin="10dp"
-          android:layout_weight=".5"
-          android:background="@drawable/bottom_sheet_bg"
-          android:gravity="center"
-          android:maxLines="2"
-          android:text="NO\ngo backward / reverse last command"
-          android:lineSpacingMultiplier="1.2"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/no_leftspeed"
+          android:minHeight="32dp"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="No"
           android:textAlignment="center" />
+        <TextView
+          android:id="@+id/no_mappingtxt"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:layout_column="3"
+          android:layout_gravity="start"
+          android:maxLines="2"
+          android:text="go back / reverse last command" />
+      </TableRow>
 
-      </LinearLayout>
-
-      <LinearLayout
+      <TableRow
+        android:id="@+id/up_row"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="horizontal"
-        android:weightSum="1">
-
+        android:weightSum="4">
+        <TextView
+          android:id="@+id/yes_operator3"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/yes_leftspeed"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="x"
+          android:textAlignment="center" />
+        <EditText
+          android:id="@+id/up_leftspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_column="1"
+          android:layout_gravity="start"
+          android:layout_span="2"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:text="120" />
         <TextView
           android:id="@+id/up"
-          android:layout_width="0dp"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/up_leftspeed"
+          android:minHeight="32dp"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="Up"
+          android:textAlignment="center" />
+        <TextView
+          android:id="@+id/up_mappingtxt"
+          android:layout_width="match_parent"
           android:layout_height="match_parent"
-          android:layout_margin="10dp"
-          android:layout_weight=".5"
-          android:background="@drawable/bottom_sheet_bg"
-          android:gravity="center"
-          android:text="UP\nincrease speed"
-          android:lineSpacingMultiplier="1.2" />
+          android:layout_column="3"
+          android:layout_gravity="start"
+          android:maxLines="2"
+          android:text="increase speed" />
+      </TableRow>
 
+      <TableRow
+        android:id="@+id/down_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:weightSum="4">
+        <TextView
+          android:id="@+id/yes_operator4"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/yes_leftspeed"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="x"
+          android:textAlignment="center" />
+        <EditText
+          android:id="@+id/down_leftspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_column="1"
+          android:layout_gravity="start"
+          android:layout_span="2"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:text="80" />
         <TextView
           android:id="@+id/down"
-          android:layout_width="0dp"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/down_leftspeed"
+          android:minHeight="32dp"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="Down"
+          android:textAlignment="center" />
+        <TextView
+          android:id="@+id/down_mappingtxt"
+          android:layout_width="match_parent"
           android:layout_height="match_parent"
-          android:layout_margin="10dp"
-          android:layout_weight=".5"
-          android:background="@drawable/bottom_sheet_bg"
-          android:gravity="center"
-          android:text="DOWN\ndecrease speed"
-          android:lineSpacingMultiplier="1.2" />
+          android:layout_column="3"
+          android:layout_gravity="start"
+          android:maxLines="2"
+          android:text="decrease speed" />
+      </TableRow>
 
-      </LinearLayout>
-
-      <LinearLayout
+      <TableRow
+        android:id="@+id/left_row"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="horizontal"
-        android:weightSum="1">
-
+        android:weightSum="4">
+        <TextView
+          android:id="@+id/yes_operator5"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/yes_leftspeed"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="+"
+          android:textAlignment="center" />
+        <EditText
+          android:id="@+id/left_leftspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_column="1"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:text="-25" />
+        <EditText
+          android:id="@+id/left_rightspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="start"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:text="25" />
         <TextView
           android:id="@+id/left"
-          android:layout_width="0dp"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/left_leftspeed"
+          android:minHeight="32dp"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="Left"
+          android:textAlignment="center" />
+        <TextView
+          android:id="@+id/left_mappingtxt"
+          android:layout_width="match_parent"
           android:layout_height="match_parent"
-          android:layout_margin="10dp"
-          android:layout_weight=".5"
-          android:background="@drawable/bottom_sheet_bg"
-          android:gravity="center"
-          android:text="LEFT\nincrease steering to left"
-          android:lineSpacingMultiplier="1.2" />
+          android:layout_column="3"
+          android:layout_gravity="start"
+          android:maxLines="2"
+          android:text="increase left turn" />
+      </TableRow>
 
+      <TableRow
+        android:id="@+id/right_row"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:weightSum="4">
+        <TextView
+          android:id="@+id/yes_operator6"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/yes_leftspeed"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="+"
+          android:textAlignment="center" />
+        <EditText
+          android:id="@+id/right_leftspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_column="1"
+          android:layout_gravity="start"
+          android:enabled="false"
+          android:minHeight="48dp"
+          android:singleLine="true"
+          android:text="25" />
+        <EditText
+          android:id="@+id/right_rightspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="start"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:minWidth="48dp"
+          android:text="-25" />
         <TextView
           android:id="@+id/right"
-          android:layout_width="0dp"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/right_leftspeed"
+          android:minHeight="32dp"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="Right"
+          android:textAlignment="center" />
+        <TextView
+          android:id="@+id/right_mappingtxt"
+          android:layout_width="match_parent"
           android:layout_height="match_parent"
-          android:layout_margin="10dp"
-          android:layout_weight=".5"
-          android:background="@drawable/bottom_sheet_bg"
-          android:gravity="center"
-          android:text="RIGHT\nincrease steering to right"
-          android:lineSpacingMultiplier="1.2" />
+          android:layout_column="3"
+          android:layout_gravity="start"
+          android:maxLines="2"
+          android:text="increase right turn" />
+      </TableRow>
 
-      </LinearLayout>
-
-      <LinearLayout
+      <TableRow
+        android:id="@+id/on_row"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="horizontal"
-        android:weightSum="1">
-
+        android:weightSum="4">
+        <TextView
+          android:id="@+id/yes_operator8"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/yes_leftspeed"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="+"
+          android:textAlignment="center" />
+        <EditText
+          android:id="@+id/on_leftspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_column="1"
+          android:layout_gravity="start"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:singleLine="true"
+          android:text="50" />
+        <EditText
+          android:id="@+id/on_rightspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="start"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:text="50" />
         <TextView
           android:id="@+id/on"
-          android:layout_width="0dp"
-          android:layout_height="match_parent"
-          android:layout_margin="10dp"
-          android:layout_weight=".5"
-          android:background="@drawable/bottom_sheet_bg"
-          android:gravity="center"
-          android:text="ON\nswitch auto mode on"
-          android:lineSpacingMultiplier="1.2" />
-
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/on_leftspeed"
+          android:minHeight="32dp"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="On"
+          android:textAlignment="center" />
         <TextView
-          android:id="@+id/off"
-          android:layout_width="0dp"
+          android:id="@+id/on_mappingtxt"
+          android:layout_width="match_parent"
           android:layout_height="match_parent"
-          android:layout_margin="10dp"
-          android:layout_weight=".5"
-          android:background="@drawable/bottom_sheet_bg"
-          android:gravity="center"
-          android:text="OFF\nswitch auto mode off"
-          android:lineSpacingMultiplier="1.2" />
+          android:layout_gravity="start"
+          android:maxLines="2"
+          android:text="switch auto mode on" />
+      </TableRow>
 
-      </LinearLayout>
-
-      <LinearLayout
+      <TableRow
+        android:id="@+id/off_row"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:orientation="horizontal"
-        android:weightSum="1">
+        android:weightSum="4">
+        <EditText
+          android:id="@+id/off_leftspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_column="1"
+          android:layout_gravity="start"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:text="0" />
+        <EditText
+          android:id="@+id/off_rightspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="start"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:text="0" />
+        <TextView
+          android:id="@+id/off"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/off_leftspeed"
+          android:minHeight="32dp"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="Off"
+          android:textAlignment="center" />
+        <TextView
+          android:id="@+id/off_mappingtxt"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:layout_gravity="start"
+          android:maxLines="2"
+          android:text="Switch auto mode off" />
+      </TableRow>
 
+      <TableRow
+        android:id="@+id/stop_row"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:weightSum="4">
+        <EditText
+          android:id="@+id/stop_leftspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_column="1"
+          android:layout_gravity="start"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:text="0" />
+        <EditText
+          android:id="@+id/stop_rightspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="start"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:text="0" />
         <TextView
           android:id="@+id/stop"
-          android:layout_width="0dp"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/stop_leftspeed"
+          android:minHeight="32dp"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="Stop"
+          android:textAlignment="center" />
+        <TextView
+          android:id="@+id/stop_mappingtxt"
+          android:layout_width="match_parent"
           android:layout_height="match_parent"
-          android:layout_margin="10dp"
-          android:layout_weight=".5"
-          android:background="@drawable/bottom_sheet_bg"
-          android:gravity="center"
-          android:text="STOP\nstop robot"
-          android:lineSpacingMultiplier="1.2" />
+          android:layout_gravity="start"
+          android:maxLines="2"
+          android:text="stop robot" />
+      </TableRow>
 
+      <TableRow
+        android:id="@+id/go_row"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="horizontal"
+        android:weightSum="4">
+        <TextView
+          android:id="@+id/yes_operator7"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/yes_leftspeed"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="+"
+          android:textAlignment="center" />
+        <EditText
+          android:id="@+id/go_leftspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_column="1"
+          android:layout_gravity="start"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:minWidth="48dp"
+          android:text="25" />
+        <EditText
+          android:id="@+id/go_rightspeed"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="start"
+          android:enabled="false"
+          android:inputType="numberSigned"
+          android:minHeight="48dp"
+          android:singleLine="true"
+          android:text="25" />
         <TextView
           android:id="@+id/go"
-          android:layout_width="0dp"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:labelFor="@id/go_leftspeed"
+          android:minHeight="32dp"
+          android:minWidth="48dp"
+          android:singleLine="true"
+          android:text="Go"
+          android:textAlignment="center" />
+        <TextView
+          android:id="@+id/go_mappingtxt"
+          android:layout_width="match_parent"
           android:layout_height="match_parent"
-          android:layout_margin="10dp"
-          android:layout_weight=".5"
-          android:background="@drawable/bottom_sheet_bg"
-          android:gravity="center"
-          android:text="GO\ngo forward"
-          android:lineSpacingMultiplier="1.2" />
-
-      </LinearLayout>
-
-    </LinearLayout>
-
+          android:layout_gravity="start"
+          android:maxLines="2"
+          android:text="go forward" />
+      </TableRow>
+    </TableLayout>
   </RelativeLayout>
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

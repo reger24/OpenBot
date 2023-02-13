@@ -2,8 +2,6 @@ package org.openbot.env.voicerecog;
 
 import android.Manifest;
 import android.app.Service;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothHeadset;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -15,7 +13,6 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.MediaRecorder.AudioSource;
-import android.media.audiofx.NoiseSuppressor;
 import android.os.Binder;
 import android.os.IBinder;
 import android.widget.Toast;
@@ -256,6 +253,7 @@ public class VoiceRecognitionService extends Service {
               } else if (state == AudioManager.SCO_AUDIO_STATE_DISCONNECTED) {
                 btHeadsetConnected = false;
                 Timber.d("SCO audio disconnected");
+                unregisterReceiver(this);
               }
             }
           },

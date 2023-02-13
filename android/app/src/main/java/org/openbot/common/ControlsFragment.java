@@ -589,7 +589,7 @@ public abstract class ControlsFragment extends Fragment implements ServerListene
           // already handled
           break;
         case "no": // go backward (if not aleardy moving) or reverse direction
-          if (vehicle.getControl().getLeft() + vehicle.getControl().getRight() > 0) {
+          if (Math.abs(vehicle.getControl().getLeft() + vehicle.getControl().getRight()) > 0f) {
             left = -vehicle.getControl().getLeft();
             right = -vehicle.getControl().getRight();
           } else {

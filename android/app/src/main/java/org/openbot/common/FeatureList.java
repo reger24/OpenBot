@@ -16,8 +16,8 @@ public class FeatureList {
   public static final String DEFAULT = "Default";
   public static final String CONTROLLER = "Controller";
   public static final String CONTROLLER_MAPPING = "Controller Mapping";
-  public static final String VOICE_COMMAND_INFO = "Voice Recognition Commands";
   public static final String ROBOT_INFO = "Robot Info";
+  public static final String VOICE_COMMAND_INFO = "Voice Cmd Mapping";
 
   // Game
   public static final String GAME = "Game";

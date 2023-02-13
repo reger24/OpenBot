@@ -638,13 +638,15 @@ public class ObjectNavFragment extends CameraFragment {
         if (!binding.autoSwitch.isChecked()) {
           // must run in own looper thread otherwise runtime exception
           // android.util.AndroidRuntimeException: Animators may only be run on Looper threads
-          requireActivity().runOnUiThread(() -> binding.autoSwitch.setChecked(true));
+          requireActivity().runOnUiThread(() -> setNetworkEnabled(true));
         }
         break;
 
       case "off":
+        computingNetwork = true; // simulate busy to prevent further processing of detector data
+        vehicle.stopBot();
         if (binding.autoSwitch.isChecked()) {
-          requireActivity().runOnUiThread(() -> binding.autoSwitch.setChecked(false));
+          requireActivity().runOnUiThread(() -> setNetworkEnabled(false));
         }
         vehicle.stopBot();
         break;

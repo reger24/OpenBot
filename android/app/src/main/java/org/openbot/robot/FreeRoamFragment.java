@@ -296,11 +296,13 @@ public class FreeRoamFragment extends ControlsFragment {
   @Override
   protected void processVoiceRecognitionCommand(String voicecommand) {
     super.processVoiceRecognitionCommand(voicecommand);
-    requireActivity().runOnUiThread(new Runnable() {
-      @Override
-      public void run() {
-        handleDriveCommand();
-      }
-    });
+    requireActivity()
+        .runOnUiThread(
+            new Runnable() {
+              @Override
+              public void run() {
+                handleDriveCommand();
+              }
+            });
   }
 }

@@ -114,8 +114,18 @@ public class VoiceCommandMappingFragment extends ControlsFragment {
 
     // highlight recognized text view
     if (selectedTextView != null) {
-      selectedTextView.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
-      selectedTextView.setTextColor(getResources().getColor(android.R.color.holo_orange_light));
+      requireActivity()
+          .runOnUiThread(
+              new Runnable() {
+                @Override
+                public void run() {
+                  selectedTextView.setBackgroundColor(
+                      getResources().getColor(R.color.colorPrimaryDark));
+                  selectedTextView.setTextColor(
+                      getResources().getColor(android.R.color.holo_orange_light));
+                }
+              });
+
       handler.postDelayed(
           new Runnable() {
             @Override
@@ -124,7 +134,7 @@ public class VoiceCommandMappingFragment extends ControlsFragment {
               selectedTextView.setTextColor(getResources().getColor(R.color.colorPrimaryDark));
             }
           },
-          750);
+          800);
     }
   }
 }

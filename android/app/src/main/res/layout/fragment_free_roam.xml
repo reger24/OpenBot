@@ -51,7 +51,7 @@
       android:id="@+id/headsetToggle"
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
-      android:button="@drawable/ic_headset"
+      android:button="@drawable/ic_headset_24"
       android:buttonTint="@color/colorPrimary"
       android:checked="true"
       android:tooltipText="BT headset is enabled"

@@ -184,6 +184,17 @@ All models are quantized for better performance on embedded devices. Please refe
 <img src="../../docs/images/screen_model_management.gif" alt="Model Management" width="25%" />
 </p>
 
+### Voice Command Mapping
+
+Simple UI to show the available voice commands available in the integrated on-device voice recognition. The voice command recognition is based on [Tensorflow speech command recognition demo](https://github.com/tensorflow/examples/tree/189c662d500c20b9f9e93fef0af97d5311e64377/lite/examples/speech_commands/android#tensorflow-lite-speech-command-recognition-android-demo)
+To activate voice recognition activate it on the Settings screen. Additionally it is highly recommended to connect a Bluetooth headset for voice recognition (due to interference with motor noise).
+To use a headset pair a bluetooth headset with the phone and activate the usage of the paired headset on the Settings screen.
+If activated on the Settings screen, voice commands are available in "Free Roaming" and "Object Tracking" as indicated by the headset symbol on bottom sheet.
+
+<p align="left">
+<img src="../../docs/images/screen_voice_commands.gif" alt="Voice Command Mapping" width="25%" />
+</p>
+
 ### Benchmark
 
 #### Phones
