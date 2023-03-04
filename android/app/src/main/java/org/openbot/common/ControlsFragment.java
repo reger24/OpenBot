@@ -78,6 +78,13 @@ public abstract class ControlsFragment extends Fragment implements ServerListene
   private Spinner modelSpinner;
   private Spinner serverSpinner;
 
+  @Override
+  public void onCreate(@Nullable Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    // create before inflateFragment() to prevent npe when calling addCamera()
+    preferencesManager = new SharedPreferencesManager(requireContext());
+  }
+
   protected boolean isBound_vrservice =
       false; // flag VoiceRecognitionService bound (up and running)
   protected ServiceConnection vrserviceconnection; // for local voice recognition service
